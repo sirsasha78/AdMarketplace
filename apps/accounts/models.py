@@ -1,3 +1,4 @@
+from phonenumber_field.modelfields import PhoneNumberField
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -19,7 +20,7 @@ class User(AbstractUser, IsDeletedModel):
     модели пользователя Django (AbstractUser) и добавляет к ней дополнительные поля."""
 
     username = None
-    phone_number = models.CharField(max_length=15, blank=True, verbose_name="Телефон")
+    phone_number = PhoneNumberField(blank=True, verbose_name="Телефон")
     email = models.EmailField(unique=True, verbose_name="Электронная почта")
     avatar = models.ImageField(
         upload_to="avatars/",

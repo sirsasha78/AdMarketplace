@@ -1,3 +1,4 @@
+from phonenumber_field.modelfields import PhoneNumberField
 from django.db import models
 from django.conf import settings
 
@@ -19,7 +20,7 @@ class ShippingAddress(BaseModel):
     )
     full_name = models.CharField(max_length=255, verbose_name="Полное имя получателя")
     email = models.EmailField(verbose_name="Электронная почта")
-    phone = models.CharField(max_length=15, verbose_name="Номер телефона")
+    phone = PhoneNumberField(verbose_name="Номер телефона")
     address = models.CharField(max_length=1000, verbose_name="Адрес")
     city = models.CharField(max_length=200, verbose_name="Город")
     country = models.CharField(max_length=200, verbose_name="Страна")
