@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "phonenumber_field",
+    "drf_spectacular",
     "apps.accounts",
     "apps.profiles",
     "apps.sellers",
@@ -136,3 +137,13 @@ AUTH_USER_MODEL = "accounts.User"
 
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "marketplace",
+    "VERSION": "0.0.1",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
