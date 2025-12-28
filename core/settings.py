@@ -152,6 +152,9 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "marketplace",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,
+    },
 }
 
 SIMPLE_JWT = {
