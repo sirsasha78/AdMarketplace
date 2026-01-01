@@ -7,17 +7,19 @@ from apps.common.models import IsDeletedModel
 from apps.common.services.validators import IMAGE_VALIDATORS
 
 
-ACCOUNT_TYPE_CHOICES = (
-    ("SELLER", "Продавец"),
-    ("BUYER", "Покупатель"),
-)
-
-
 class User(AbstractUser, IsDeletedModel):
     """Модель пользователя системы.
     Описывает пользователей платформы, включая их контактную информацию,
     аватар, тип учетной записи и основные атрибуты. Наследуется от стандартной
     модели пользователя Django (AbstractUser) и добавляет к ней дополнительные поля."""
+
+    ACCOUNT_TYPE_SELLER = "SELLER"
+    ACCOUNT_TYPE_BUYER = "BUYER"
+
+    ACCOUNT_TYPE_CHOICES = (
+        ("SELLER", "Продавец"),
+        ("BUYER", "Покупатель"),
+    )
 
     username = None
     phone_number = PhoneNumberField(blank=True, verbose_name="Телефон")
@@ -33,7 +35,7 @@ class User(AbstractUser, IsDeletedModel):
         max_length=6,
         choices=ACCOUNT_TYPE_CHOICES,
         db_index=True,
-        default="BUYER",
+        default=ACCOUNT_TYPE_BUYER,
         verbose_name="Тип учетной записи",
     )
 
