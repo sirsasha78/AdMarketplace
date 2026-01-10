@@ -1,3 +1,22 @@
 from django.contrib import admin
 
-# Register your models here.
+from apps.profiles.models import ShippingAddress
+
+
+@admin.register(ShippingAddress)
+class ShippingAddressAdmin(admin.ModelAdmin):
+    """Админ-панель для модели ShippingAddress."""
+
+    list_display = (
+        "user",
+        "fullname",
+        "email",
+        "phone",
+        "address",
+        "city",
+        "country",
+        "zipcode",
+    )
+    list_filter = ("city", "country", "user")
+    search_fields = ("city", "address")
+    raw_id_fields = ("user",)
