@@ -9,7 +9,7 @@ class ShippingAddressAdmin(admin.ModelAdmin):
 
     list_display = (
         "user",
-        "fullname",
+        "full_name",
         "email",
         "phone",
         "address",
