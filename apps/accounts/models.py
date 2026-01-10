@@ -1,3 +1,4 @@
+import uuid
 from phonenumber_field.modelfields import PhoneNumberField
 from django.db import models
 from django.contrib.auth.models import AbstractUser
@@ -21,7 +22,6 @@ class User(AbstractUser, IsDeletedModel):
         ("BUYER", "Покупатель"),
     )
 
-    username = None
     phone_number = PhoneNumberField(blank=True, verbose_name="Телефон")
     email = models.EmailField(unique=True, verbose_name="Электронная почта")
     avatar = models.ImageField(
@@ -54,3 +54,10 @@ class User(AbstractUser, IsDeletedModel):
 
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
+
+    def save(self, *args, **kwargs):
+        """Сохраняет пользователя в базе данных."""
+
+        if not self.username:
+            self.username = str(uuid.uuid4())[:30]
+        super().save(*args, **kwargs)
