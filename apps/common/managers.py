@@ -31,7 +31,7 @@ class GetOrNoneManager(models.Manager):
     def get_or_none(self, **kwargs) -> models.Model | None:
         """Возвращает объект, соответствующий заданным параметрам, или None, если объект не найден."""
 
-        return self.get_queryset().get_or_none()
+        return self.get_queryset().get_or_none(**kwargs)
 
 
 class IsDeletedQuerySet(GetOrNoneQuerySet):
