@@ -90,7 +90,7 @@ class SellerAnnouncementsView(generics.ListCreateAPIView):
         по её slug и устанавливает продавца. Затем создаёт объект объявления."""
 
         data = serializer.validated_data
-        category_slug = data.pop("category_slug", None)
+        category_slug = data.pop("category_slug")
         category = Category.objects.get(slug=category_slug)
         seller = self.get_object()
         data["category"] = category
@@ -154,7 +154,7 @@ class SellerAnnouncementView(
 
         announcement = self.get_object()
         data = serializer.validated_data
-        category_slug = data.pop("category_slug", None)
+        category_slug = data.pop("category_slug")
         category = Category.objects.get(slug=category_slug)
         data["category"] = category
         set_dict_attr(announcement, data)

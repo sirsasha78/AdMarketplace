@@ -7,6 +7,7 @@ from drf_spectacular.utils import extend_schema
 
 from apps.profiles.serializers import ProfileSerializer, ShippingAddressSerializer
 from apps.profiles.models import ShippingAddress
+from apps.common.permissions import IsOwner
 
 
 tags = ["Profiles"]
@@ -18,6 +19,7 @@ class ProfileView(generics.RetrieveUpdateDestroyAPIView):
     текущего аутентифицированного пользователя. Также позволяет деактивировать
     учётную запись (мягкое удаление через флаг `is_active`)."""
 
+    permission_classes = (IsOwner,)
     serializer_class = ProfileSerializer
 
     def get_object(self):
@@ -65,6 +67,7 @@ class ShippingAddressesView(generics.ListCreateAPIView):
     - Создать новый адрес доставки.
     Возвращает только те адреса, которые принадлежат текущему пользователю."""
 
+    permission_classes = (IsOwner,)
     serializer_class = ShippingAddressSerializer
 
     def get_queryset(self) -> QuerySet[ShippingAddress]:
@@ -108,6 +111,7 @@ class ShippingAddressViewID(generics.RetrieveUpdateDestroyAPIView):
     Доступ разрешён только аутентифицированным пользователям.
     Пользователь может взаимодействовать только с собственными адресами доставки."""
 
+    permission_classes = (IsOwner,)
     serializer_class = ShippingAddressSerializer
 
     def get_queryset(self) -> QuerySet[ShippingAddress]:
@@ -124,6 +128,7 @@ class ShippingAddressViewID(generics.RetrieveUpdateDestroyAPIView):
         obj = queryset.get_or_none(id=self.kwargs["id"])
         if not obj:
             raise NotFound({"message": "Адреса доставки не существует!"})
+        self.check_object_permissions(self.request, obj)
         return obj
 
     @extend_schema(
