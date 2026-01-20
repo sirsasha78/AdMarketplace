@@ -4,6 +4,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import generics, mixins
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
+from rest_framework.permissions import IsAuthenticated
 
 from apps.sellers.models import Seller
 from apps.sellers.serializers import SellerSerializer
@@ -14,6 +15,7 @@ from apps.announcements.serializers import (
     CreateAnnouncementSerializer,
 )
 from apps.common.services.utils import set_dict_attr
+from apps.common.permissions import IsSeller
 
 
 tags = ["Sellers"]
@@ -25,6 +27,7 @@ class SellersView(generics.CreateAPIView):
     Если профиль уже существует — обновляется.
     Тип аккаунта автоматически меняется на 'SELLER'."""
 
+    permission_classes = [IsAuthenticated]
     serializer_class = SellerSerializer
 
     def perform_create(self, serializer: SellerSerializer) -> Seller:
@@ -61,12 +64,15 @@ class SellerAnnouncementsView(generics.ListCreateAPIView):
     - Получить список всех объявлений текущего продавца (GET-запрос).
     - Создать новое объявление от имени продавца (POST-запрос)."""
 
+    permission_classes = [IsSeller]
+
     def get_object(self) -> Seller:
         """Возвращает профиль продавца текущего пользователя."""
 
         obj = Seller.objects.get_or_none(user=self.request.user, is_approved=True)
         if not obj:
             raise NotFound({"message": "Профиль продавца не найден."})
+        self.check_object_permissions(self.request, obj)
         return obj
 
     def get_queryset(self) -> QuerySet[Announcement]:
@@ -130,6 +136,7 @@ class SellerAnnouncementView(
     - DELETE — удаление объявления.
     Доступ только владельцу."""
 
+    permission_classes = [IsSeller]
     serializer_class = CreateAnnouncementSerializer
 
     def get_object(self):

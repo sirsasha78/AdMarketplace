@@ -3,6 +3,7 @@ from rest_framework import permissions
 from rest_framework.views import View
 
 from typing import Any
+from apps.accounts.models import User
 
 
 class IsOwner(permissions.BasePermission):
@@ -23,6 +24,37 @@ class IsOwner(permissions.BasePermission):
         """Проверяет, имеет ли пользователь право на взаимодействие с конкретным объектом."""
 
         if obj.user == request.user or request.user.is_staff:
+            return True
+        self.message = "У вас нет прав на доступ к этому объекту."
+        return False
+
+
+class IsSeller(permissions.BasePermission):
+    """Пользовательское разрешение, позволяющее доступ только подтверждённым продавцам или персоналу.
+    Разрешение проверяет права доступа на двух уровнях:
+    - На уровне запроса (has_permission): пользователь должен быть аутентифицирован,
+      иметь тип аккаунта "SELLER" и подтверждённый профиль продавца, либо быть сотрудником (is_staff).
+    - На уровне объекта (has_object_permission): пользователь может взаимодействовать
+      только с объектами, принадлежащими его профилю продавца, либо быть сотрудником (is_staff).
+    Используется для защиты представлений, связанных с функционалом продавца,
+    таких как управление товарами, объявлениями, заказами и статистикой.
+    Администраторы (с атрибутом is_staff) имеют полный доступ ко всем объектам."""
+
+    def has_permission(self, request: HttpRequest, view: View) -> bool:
+        """Проверяет, имеет ли пользователь право на выполнение запроса."""
+
+        if (
+            request.user.is_authenticated
+            and request.user.account_type == User.ACCOUNT_TYPE_SELLER
+            and request.user.seller.is_approved
+        ) or request.user.is_staff:
+            return True
+        return False
+
+    def has_object_permission(self, request: HttpRequest, view: View, obj: Any) -> bool:
+        """Проверяет, имеет ли пользователь право на взаимодействие с конкретным объектом."""
+
+        if obj == request.user.seller or request.user.is_staff:
             return True
         self.message = "У вас нет прав на доступ к этому объекту."
         return False
