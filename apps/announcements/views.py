@@ -3,11 +3,13 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
+from rest_framework.permissions import AllowAny
 from django.db.models import QuerySet
 
 from apps.announcements.serializers import CategorySerializer, AnnouncementSerializer
 from apps.announcements.models import Category, Announcement
 from apps.sellers.models import Seller
+from apps.common.permissions import IsAdminOrReadOnly
 
 
 tags = ["Announcements"]
@@ -19,6 +21,7 @@ class CategoriesView(generics.ListCreateAPIView):
     - Получение списка всех категорий (GET-запрос).
     - Создание новой категории (POST-запрос)."""
 
+    permission_classes = [IsAdminOrReadOnly]
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
 
@@ -53,6 +56,7 @@ class AnnouncementsByCategoryView(generics.ListAPIView):
     Предоставляет API-эндпоинт для получения всех объявлений,
     относящихся к определённой категории, указанной по её slug."""
 
+    permission_classes = [AllowAny]
     serializer_class = AnnouncementSerializer
 
     def get_object(self) -> Category:
@@ -91,6 +95,7 @@ class AnnouncementsView(generics.ListAPIView):
     доступных в системе. Поддерживает оптимизированный запрос к базе данных
     с предзагрузкой связанных объектов: категории, продавца и пользователя продавца."""
 
+    permission_classes = [AllowAny]
     serializer_class = AnnouncementSerializer
 
     def get_queryset(self) -> QuerySet[Announcement]:
@@ -118,6 +123,7 @@ class AnnouncementsBySellerView(generics.ListAPIView):
     принадлежащие продавцу, идентифицируемому по его slug.
     Доступен для всех пользователей (публичный)."""
 
+    permission_classes = [AllowAny]
     serializer_class = AnnouncementSerializer
 
     def get_object(self) -> Seller:
@@ -156,6 +162,7 @@ class AnnouncementDetailView(generics.RetrieveAPIView):
     по его уникальному идентификатору в виде slug. Доступен для всех пользователей.
     Если объявление с указанным slug не найдено, возвращается ошибка 404."""
 
+    permission_classes = [AllowAny]
     serializer_class = AnnouncementSerializer
 
     def get_object(self) -> Announcement:
