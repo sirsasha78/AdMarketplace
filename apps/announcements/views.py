@@ -4,12 +4,15 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import QuerySet
 
 from apps.announcements.serializers import CategorySerializer, AnnouncementSerializer
 from apps.announcements.models import Category, Announcement
 from apps.sellers.models import Seller
 from apps.common.permissions import IsAdminOrReadOnly
+from apps.announcements.filters import AnnouncementFilter
 
 
 tags = ["Announcements"]
@@ -97,6 +100,10 @@ class AnnouncementsView(generics.ListAPIView):
 
     permission_classes = [AllowAny]
     serializer_class = AnnouncementSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = AnnouncementFilter
+    search_fields = ["title", "category__name"]
+    ordering_fields = ["price", "created_at"]
 
     def get_queryset(self) -> QuerySet[Announcement]:
         """Возвращает QuerySet всех объявлений с предзагруженными связанными данными."""
