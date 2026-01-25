@@ -16,6 +16,7 @@ from apps.announcements.serializers import (
 )
 from apps.common.services.utils import set_dict_attr
 from apps.common.permissions import IsSeller
+from apps.common.paginations import CustomPagination
 
 
 tags = ["Sellers"]
@@ -62,9 +63,12 @@ class SellerAnnouncementsView(generics.ListCreateAPIView):
     """Представление для управления объявлениями продавца.
     Данный эндпоинт позволяет:
     - Получить список всех объявлений текущего продавца (GET-запрос).
-    - Создать новое объявление от имени продавца (POST-запрос)."""
+    - Создать новое объявление от имени продавца (POST-запрос).
+    Поддерживает:
+    - Пагинацию (?page=2&page_size=50)"""
 
     permission_classes = [IsSeller]
+    pagination_class = CustomPagination
 
     def get_object(self) -> Seller:
         """Возвращает профиль продавца текущего пользователя."""

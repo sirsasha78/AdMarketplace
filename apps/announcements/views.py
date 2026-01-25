@@ -13,6 +13,7 @@ from apps.announcements.models import Category, Announcement
 from apps.sellers.models import Seller
 from apps.common.permissions import IsAdminOrReadOnly
 from apps.announcements.filters import AnnouncementFilter
+from apps.common.paginations import CustomPagination
 
 
 tags = ["Announcements"]
@@ -22,11 +23,14 @@ class CategoriesView(generics.ListCreateAPIView):
     """Представление для работы со списком категорий объявлений.
     Поддерживает:
     - Получение списка всех категорий (GET-запрос).
-    - Создание новой категории (POST-запрос)."""
+    - Создание новой категории (POST-запрос),
+    - Пагинацию (?page=2&page_size=50)
+    """
 
     permission_classes = [IsAdminOrReadOnly]
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
+    pagination_class = CustomPagination
 
     @extend_schema(
         summary="Получение списка категорий",
@@ -57,10 +61,13 @@ class CategoriesView(generics.ListCreateAPIView):
 class AnnouncementsByCategoryView(generics.ListAPIView):
     """Представление для получения списка объявлений по категории.
     Предоставляет API-эндпоинт для получения всех объявлений,
-    относящихся к определённой категории, указанной по её slug."""
+    относящихся к определённой категории, указанной по её slug.
+    Поддерживает:
+    - Пагинацию (?page=2&page_size=50)"""
 
     permission_classes = [AllowAny]
     serializer_class = AnnouncementSerializer
+    pagination_class = CustomPagination
 
     def get_object(self) -> Category:
         """Возвращает объект категории по slug из URL-параметров.
@@ -94,9 +101,12 @@ class AnnouncementsByCategoryView(generics.ListAPIView):
 
 class AnnouncementsView(generics.ListAPIView):
     """Представление для получения списка всех объявлений.
-    Предоставляет API-эндпоинт, возвращающий полный список объявлений,
-    доступных в системе. Поддерживает оптимизированный запрос к базе данных
-    с предзагрузкой связанных объектов: категории, продавца и пользователя продавца."""
+    Поддерживает:
+    - Пагинацию (?page=2&page_size=50),
+    - Фильтрацию (DjangoFilterBackend),
+    - Поиск (?search=...),
+    - Сортировку (?ordering=-price).
+    Оптимизирован с select_related."""
 
     permission_classes = [AllowAny]
     serializer_class = AnnouncementSerializer
@@ -104,6 +114,7 @@ class AnnouncementsView(generics.ListAPIView):
     filterset_class = AnnouncementFilter
     search_fields = ["title", "category__name"]
     ordering_fields = ["price", "created_at"]
+    pagination_class = CustomPagination
 
     def get_queryset(self) -> QuerySet[Announcement]:
         """Возвращает QuerySet всех объявлений с предзагруженными связанными данными."""
@@ -128,10 +139,13 @@ class AnnouncementsBySellerView(generics.ListAPIView):
     """Представление для получения списка объявлений определённого продавца.
     Предоставляет API-эндпоинт, возвращающий все объявления,
     принадлежащие продавцу, идентифицируемому по его slug.
-    Доступен для всех пользователей (публичный)."""
+    Доступен для всех пользователей (публичный).
+    Поддерживает:
+    - Пагинацию (?page=2&page_size=50)"""
 
     permission_classes = [AllowAny]
     serializer_class = AnnouncementSerializer
+    pagination_class = CustomPagination
 
     def get_object(self) -> Seller:
         """Возвращает объект продавца по slug из URL-параметров.
