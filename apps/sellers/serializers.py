@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.sellers.models import Seller
+from apps.sellers.models import Seller, SellerReview
 
 
 class SellerSerializer(serializers.ModelSerializer):
@@ -27,3 +27,52 @@ class SellerSerializer(serializers.ModelSerializer):
             "website_url": {"required": False, "allow_null": True},
             "is_approved": {"read_only": True},
         }
+
+
+class SellerReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания и валидации отзыва пользователя на продавца.
+    Предоставляет функциональность для:
+    - Валидации данных при создании отзыва,
+    - Проверки уникальности отзыва (один активный отзыв от пользователя на одного продавца),
+    - Валидации рейтинга в допустимом диапазоне (от 1 до 5),
+    - Поддержки мягкого удаления: позволяет оставить новый отзыв,
+      если предыдущий был помечен как удалённый (is_deleted=True).
+    Используется в представлениях для обработки входящих данных
+    при создании нового отзыва на продавца."""
+
+    class Meta:
+        """Метакласс сериализатора."""
+
+        model = SellerReview
+        fields = ("seller", "rating", "text")
+        extra_kwargs = {
+            "text": {"allow_blank": True, "required": False},
+        }
+
+    def create(self, validated_data: dict) -> SellerReview:
+        """Создаёт новый отзыв на продавца после проверки уникальности.
+        Проверяет, существует ли уже неудалённый отзыв от текущего пользователя
+        на указанного продавца. Если такой отзыв найден, вызывается ошибка валидации.
+        В противном случае создаётся новый отзыв, привязанный к текущему пользователю.
+        """
+
+        user = self.context["request"].user
+        seller = validated_data["seller"]
+
+        review = SellerReview.objects.filter(
+            user=user, seller=seller, is_deleted=False
+        ).exists()
+        if review:
+            raise serializers.ValidationError(
+                {"non_field_errors": "Вы уже оставили отзыв на этого продавца."}
+            )
+        return SellerReview.objects.create(user=user, **validated_data)
+
+    def validate_rating(self, value: int) -> int:
+        """Валидирует значение рейтинга отзыва.
+        Проверяет, что переданное значение находится в диапазоне от 1 до 5 включительно.
+        Если значение вне допустимого диапазона, вызывается ошибка валидации."""
+
+        if not 1 <= value <= 5:
+            raise serializers.ValidationError("Рейтинг должен быть от 1 до 5.")
+        return value
