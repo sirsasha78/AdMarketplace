@@ -3,7 +3,8 @@ from autoslug import AutoSlugField
 from django.db import models
 from django.conf import settings
 
-from apps.common.models import BaseModel
+from apps.common.models import BaseModel, IsDeletedModel
+from apps.accounts.models import User
 
 
 class Seller(BaseModel):
@@ -58,3 +59,45 @@ class Seller(BaseModel):
 
         verbose_name = "Продавец"
         verbose_name_plural = "Продавцы"
+
+
+class SellerReview(IsDeletedModel):
+    """Модель отзыва пользователя на продавца.
+    Хранит информацию о рейтинге и текстовом отзыве, оставленном пользователем
+    в отношении конкретного продавца. Поддерживает логическое удаление:
+    при удалении запись помечается как удалённая (is_deleted=True),
+    но не удаляется физически из базы данных.
+    Каждый пользователь может оставить только один активный отзыв на одного продавца.
+    Отзыв привязан к конкретному пользователю и продавцу.
+    Атрибуты:
+        RATING_CHOICES (tuple): Кортеж допустимых значений рейтинга — от 1 до 5."""
+
+    RATING_CHOICES = ((1, 1), (2, 2), (3, 3), (4, 4), (5, 5))
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        verbose_name="Пользователь",
+    )
+    seller = models.ForeignKey(
+        Seller,
+        on_delete=models.CASCADE,
+        related_name="seller_reviews",
+        verbose_name="Продавец",
+    )
+    rating = models.IntegerField(
+        choices=RATING_CHOICES, default=1, verbose_name="Рэйтинг"
+    )
+    text = models.TextField(blank=True, null=True, verbose_name="Текст отзыва")
+
+    def __str__(self) -> str:
+        """Возвращает строковое представление объекта отзыва."""
+
+        return f"Отзыв от {self.user} на {self.seller}"
+
+    class Meta:
+        """Метакласс модели SellerReview."""
+
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
