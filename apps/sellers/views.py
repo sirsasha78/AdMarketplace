@@ -19,21 +19,32 @@ from apps.announcements.serializers import (
     CreateAnnouncementSerializer,
 )
 from apps.common.services.utils import set_dict_attr
-from apps.common.permissions import IsSeller, IsOwnerOrReadOnly
+from apps.common.permissions import IsSeller, IsOwnerOrReadOnly, IsAdminOrReadOnly
 from apps.common.paginations import CustomPagination
 
 
 tags = ["Sellers"]
 
 
-class SellersView(generics.CreateAPIView):
-    """Создаёт профиль продавца для текущего пользователя.
-    Позволяет пользователю стать продавцом, заполнив информацию о компании.
-    Если профиль уже существует — обновляется.
-    Тип аккаунта автоматически меняется на 'SELLER'."""
+class SellersView(generics.ListCreateAPIView):
+    """Представление для получения списка всех продавцов и создания/обновления профиля продавца.
+    Данный класс реализует API-эндпоинт, который позволяет:
+    - Получать список всех продавцов с поддержкой пагинации.
+    - Создавать или обновлять профиль продавца для текущего пользователя.
 
+    При создании профиля автоматически изменяется тип аккаунта пользователя на 'SELLER'.
+    Если профиль продавца уже существует, он обновляется.
+    Атрибуты:
+        queryset (QuerySet): Набор объектов модели Seller для отображения.
+        permission_classes (list): Список классов разрешений. Доступ к созданию
+            отзыва имеют только аутентифицированные пользователи.
+        serializer_class (Serializer): Сериализатор для преобразования данных о продавце.
+        pagination_class (Pagination): Класс пагинации для постраничного вывода."""
+
+    queryset = Seller.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = SellerSerializer
+    pagination_class = CustomPagination
 
     def perform_create(self, serializer: SellerSerializer) -> Seller:
         """Создаёт или обновляет профиль продавца для пользователя.
@@ -48,6 +59,17 @@ class SellersView(generics.CreateAPIView):
             user.account_type = User.ACCOUNT_TYPE_SELLER
             user.save(update_fields=["account_type"])
         return seller
+
+    @extend_schema(
+        summary="Все продавцы",
+        description="Этот эндопоинт возвращает всех продавцов.",
+        operation_id="all_sellers",
+        tags=tags,
+    )
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        """Обрабатывает GET-запрос для получения списка всех продавцов."""
+
+        return super().get(request, *args, **kwargs)
 
     @extend_schema(
         summary="Создать профиль продавца",
