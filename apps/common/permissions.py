@@ -1,6 +1,7 @@
 from django.http import HttpRequest
 from rest_framework import permissions
 from rest_framework.views import View
+from rest_framework.request import Request
 
 from typing import Any
 from apps.accounts.models import User
@@ -75,3 +76,18 @@ class IsAdminOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return bool(request.user and request.user.is_staff)
+
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    """Пользовательское разрешение, позволяющее редактировать или удалять объект только его владельцу.
+    Разрешает чтение (GET, HEAD, OPTIONS) всем пользователям.
+    Запись (PUT, PATCH, DELETE) разрешена только владельцу объекта или персоналу (staff).
+    Используется в представлениях, где важна защита данных от изменения посторонними пользователями.
+    """
+
+    def has_object_permission(self, request: Request, view: View, obj: Any) -> bool:
+        """Проверяет, имеет ли пользователь право на выполнение операции над объектом."""
+
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return obj.user == request.user or request.user.is_staff
