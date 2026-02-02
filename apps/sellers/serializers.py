@@ -40,11 +40,15 @@ class SellerReviewSerializer(serializers.ModelSerializer):
     Используется в представлениях для обработки входящих данных
     при создании нового отзыва на продавца."""
 
+    seller = serializers.SlugRelatedField(
+        slug_field="slug", queryset=Seller.objects.all()
+    )
+
     class Meta:
         """Метакласс сериализатора."""
 
         model = SellerReview
-        fields = ("seller", "rating", "text")
+        fields = ("id", "seller", "rating", "text")
         extra_kwargs = {
             "text": {"allow_blank": True, "required": False},
         }
@@ -76,3 +80,14 @@ class SellerReviewSerializer(serializers.ModelSerializer):
         if not 1 <= value <= 5:
             raise serializers.ValidationError("Рейтинг должен быть от 1 до 5.")
         return value
+
+
+class ReviewUpdateSerializer(SellerReviewSerializer):
+    """Сериализатор для обновления отзыва продавца.
+    Наследуется от `SellerReviewSerializer` и добавляет дополнительную логику
+    для безопасного обновления отзыва. Поле `seller` переопределено как только
+    для чтения и возвращает слаг продавца, что предотвращает изменение связи
+    с продавцом при обновлении отзыва через API.
+    """
+
+    seller = serializers.ReadOnlyField(source="seller.slug")
