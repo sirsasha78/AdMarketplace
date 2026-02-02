@@ -1,3 +1,4 @@
+from django.db.models import Avg
 from rest_framework import serializers
 
 from apps.sellers.models import Seller, SellerReview
@@ -5,9 +6,18 @@ from apps.sellers.models import Seller, SellerReview
 
 class SellerSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Seller (Продавец).
-    Преобразует данные модели продавца в формат JSON и обратно.
-    Используется для представления и обновления информации о продавце
-    в API. Обеспечивает валидацию полей и настраивает права доступа к данным."""
+    Преобразует данные модели продавца в формат JSON при отправке ответа API
+    и из формата JSON при получении данных от клиента. Используется для представления,
+    обновления и валидации информации о продавце. Включает вычисляемое поле
+    average_rating — средний рейтинг продавца на основе отзывов.
+    Атрибуты:
+        average_rating (serializers.SerializerMethodField): Поле, содержащее средний
+            рейтинг продавца. Вычисляется динамически при сериализации.
+    Метакласс Meta:
+        Определяет модель, с которой работает сериализатор, список полей,
+        подлежащих сериализации, а также дополнительные настройки полей."""
+
+    average_rating = serializers.SerializerMethodField()
 
     class Meta:
         """Метакласс сериализатора, определяющий модель и поля для сериализации."""
@@ -20,6 +30,7 @@ class SellerSerializer(serializers.ModelSerializer):
             "website_url",
             "phone_number",
             "description",
+            "average_rating",
             "is_approved",
         )
         extra_kwargs = {
@@ -27,6 +38,18 @@ class SellerSerializer(serializers.ModelSerializer):
             "website_url": {"required": False, "allow_null": True},
             "is_approved": {"read_only": True},
         }
+
+    def get_average_rating(self, obj: Seller) -> float | None:
+        """Возвращает средний рейтинг продавца на основе активных отзывов.
+        Метод вычисляет среднее значение поля rating из модели SellerReview
+        для текущего продавца (obj), исключая удалённые отзывы (is_deleted=False).
+        Результат округляется до одного знака после запятой. Если отзывов нет,
+        возвращается None."""
+
+        avg = SellerReview.objects.filter(seller=obj, is_deleted=False).aggregate(
+            Avg("rating")
+        )["rating__avg"]
+        return round(avg, 1) if avg is not None else None
 
 
 class SellerReviewSerializer(serializers.ModelSerializer):
