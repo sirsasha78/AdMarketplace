@@ -296,6 +296,7 @@ class ReviewCreateView(generics.CreateAPIView):
 
     serializer_class = SellerReviewSerializer
     permission_classes = [IsAuthenticated]
+    throttle_scope = "review_create"
 
     @extend_schema(
         summary="Создание отзыва",

@@ -11,6 +11,7 @@ class RegisterAPIView(generics.CreateAPIView):
     возвращает данные нового пользователя (без пароля)."""
 
     serializer_class = CreateUserSerializer
+    throttle_scope = "register"
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
